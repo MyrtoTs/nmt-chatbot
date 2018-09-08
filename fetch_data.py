@@ -16,7 +16,7 @@ def extract_file(full_path):
 
 dataset_path = '/home/myrto/pink_dir/'
 combined_file_path = dataset_path + 'combined_file'
-database_path = dataset_path + 'reddit_sqlite_database.db'
+database_path = dataset_path + 'github/dec_17_db.db'
 
 
 
