@@ -51,7 +51,7 @@ def acceptable_comment(body):
     return True
 
 def clear_comment(body):
-    """basic test if a comment is insulting""""
+    """basic test if a comment is insulting"""
     if (('fuck' or 'shit' or 'ass' or 'bitch' or 'nigga' or 'hell' or 'whore' or 'dick' or 'piss' or 'pussy') in body):
         return False
     return True
