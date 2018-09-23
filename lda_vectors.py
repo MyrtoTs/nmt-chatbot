@@ -39,19 +39,27 @@ data_vectorizer = CountVectorizer(max_df = 0.98,
 vectorized_data = data_vectorizer.fit_transform(lines)
 data_feature_names = data_vectorizer.get_feature_names()
 
-#Grid Search fir k topics
-k_topics = {'n_components':[10, 20, 30, 40, 50, 60, 70, 80]}
+# #GRID SEARCH for k topics
+# k_topics = {'n_components':[10, 20, 30, 40, 50, 60, 70, 80]}
 
-lda = LatentDirichletAllocation(doc_topic_prior=0.1, topic_word_prior=0.01, learning_method = 'online', random_state = 42)
+# lda = LatentDirichletAllocation(doc_topic_prior=0.1, topic_word_prior=0.01, learning_method = 'online', random_state = 42)
 
-model = GridSearchCV(lda, param_grid=k_topics)
+# model = GridSearchCV(lda, param_grid=k_topics)
 
-model.fit(vectorized_data)
+# model.fit(vectorized_data)
 
-#Results
-print("Best Model's Params: ", model.best_params_)
-print("Best Log Likelihood Score: ", model.best_score_)
+# #Results
+# print("Best Model's Params: ", model.best_params_)
+# print("Best Log Likelihood Score: ", model.best_score_)
 
+
+#APPLY LDA for 40 topics
+
+lda = LatentDirichletAllocation(n_components=40, doc_topic_prior=0.1, topic_word_prior=0.01, learning_method = 'online', random_state = 42)
+
+lda.fit(vectorized_data)
+
+best_lda = lda
 
 #Create LDA_vectors for (sub)words of the vocabulary
 from_list = []
@@ -74,5 +82,5 @@ test = to_list
 vocabulary_vectorized = data_vectorizer.transform(to_list)
 vocabulary_topic_dist = np.matrix(best_lda.transform(vocabulary_vectorized))
 
-with open(chatbot_path + 'LDA_vectors.pickle', 'wb') as h:
+with open('LDA_vectors.pickle', 'wb') as h:
     pickle.dump(vocabulary_topic_dist, h)
