@@ -2,12 +2,13 @@
 
 Η σειρά που τρέχεις τα αρχεία είναι:
 
-fetch_data.py
-create_database.py
-LDA_pseudodoc.py & datafiles.py
-Μετά το prepare_data.py του chatbot
-Μετά lda_vectors.py 
-και τέλος (κανονικά) το train του chatbot.
+1. fetch_data.py
+2. create_database.py
+3. LDA_pseudodoc.py 
+   & datafiles.py
+4. Μετά το prepare_data.py του chatbot
+5. Μετά lda_vectors.py 
+6. και τέλος (κανονικά) το train του chatbot.
 
 Παρατηρήσεις
 1. Τα αρχεία εκτός του myrto-tsokanaridou-chatbot θέλουν διόρθωση στα paths, όπως και το model.py από το chatbot.
