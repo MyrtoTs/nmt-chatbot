@@ -43,7 +43,7 @@ preprocessing = {
 
     # Test sets' max size
     # You should probably increase this to something more reasonable
-    'test_size': 1000,
+    'test_size': 10000, 
 
     # Custom decaying scheme and training duration:
     # - trains model for certain number of epochs (number of list entries)
