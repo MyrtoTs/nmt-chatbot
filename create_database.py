@@ -1,8 +1,10 @@
 import json
 import sqlite3
+import string
 from langdetect import detect
+from urlextract import URLExtract
 
-database_path = '/home/myrto/pink_dir/github/dec_17_db.db'
+database_path = '/home/myrto/pink_dir/github/DataFiles/december_17_db.db'
 combined_file_path = '/home/myrto/pink_dir/RC_2017-12'
 
 print('\n\n     CREATING SQLITE DATABASE      \n\n')
@@ -30,6 +32,10 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS replies(id TEXT PRIMARY KEY,
 row_counter = 0  # counter for the rows
 paired_rows = 0  # counter for rows that are paired, as in question-answer
 
+a = string.printable + '’‘“”'
+eng_char = set(a)
+
+extractor = URLExtract()
 
 def acceptable_comment(body):
     """basic test to see if comment is not too short or too long"""
@@ -37,9 +43,12 @@ def acceptable_comment(body):
         return False
     elif len(body) > 3000:
         return False
-    elif (body == '[deleted]' or body == '[removed]'):
+    elif (body == '[deleted]' or body == '[removed]' or body.isspace()==True):
         return False
-    elif ('http' in body):
+    elif len(extractor.find_urls(body))>0:
+        return False
+    elif not(set(body).issubset(eng_char)):
+#         print('not only english characters')
         return False
     else:
         try:
@@ -52,7 +61,7 @@ def acceptable_comment(body):
 
 def clear_comment(body):
     """basic test if a comment is insulting"""
-    if (('fuck' or 'shit' or 'ass' or 'bitch' or 'nigga' or 'hell' or 'whore' or 'dick' or 'piss' or 'pussy') in body):
+    if (('fuck' or 'shit' or 'ass' or 'bitch' or 'nigga' or 'hell' or 'whore' or 'dick' or 'piss' or 'pussy') in body.lower()):
         return False
     return True
         
@@ -61,6 +70,12 @@ def sanitize_body(body):
     body = body.replace('\n', ' newlinechar ')
     body = body.replace('\r', ' newlinechar ')
     body = body.replace('"', "'")
+    while '....' in body:
+        body=body.replace('....','...') 
+    while '  ' in body:
+        body = body.replace('  ',' ')
+    while 'newlinechar newlinechar' in body:
+        body=body.replace('newlinechar newlinechar', 'newlinechar ') 
     return body
 
 
@@ -89,29 +104,51 @@ def sql_insert_reply(id, post_body, subreddit, created_utc, score,length):
 
 # dictionary that matches each post to its highest score response
 post_pairs = {}
+rejected_ids = []
 
-with open(combined_file_path, buffering=10000) as f:
+print('\n\n Accept and reject comments \n\n')
+
+with open(combined_file_path, buffering=1000000) as f:
     for row in f:
         row_counter += 1
-        if row_counter % 10000 == 0:
+        if row_counter % 1000000 == 0:
+            print('Working on row {}'.format(row_counter))
+        row = json.loads(row)
+        id = row['id']
+        comment_body = sanitize_body(row['body'])
+        score = row['score']
+
+        ### check comments ###
+                
+        if not(score>2 and acceptable_comment(comment_body) and clear_comment(comment_body)):
+            rejected_ids.append(id)
+
+print('\n Create comment pairs \n\n')
+
+row_counter = 0
+
+with open(combined_file_path, buffering=1000000) as f:
+    for row in f:
+        row_counter += 1
+        if row_counter % 1000000 == 0:
             print('Working on row {}'.format(row_counter))
         row = json.loads(row)
         id = row['id']
         parent_id = row['parent_id'].split('_')[1]
         comment_body = sanitize_body(row['body'])
         score = row['score']
-        
-        if score >= 2:
-            if (acceptable_comment(comment_body) and clear_comment(comment_body)):
 
-                if parent_id not in post_pairs:
+        ### check comments ###
+            
+        if parent_id not in rejected_ids:
+            if parent_id not in post_pairs:
+                post_pairs[parent_id] = (id, score)
+            else:
+                other_id, other_score = post_pairs[parent_id]
+                if score > other_score:
                     post_pairs[parent_id] = (id, score)
-                else:
-                    other_id, other_score = post_pairs[parent_id]
-                    if score > other_score:
-                        post_pairs[parent_id] = (id, score)
 
-                 
+                        
 print('\n\nWe have {} post pairs\n\n'.format(len(post_pairs)))
 
 print('\n\n     DATABASE INSERTION      \n\n')
@@ -121,10 +158,10 @@ reply_ids = set(x[0] for x in post_pairs.values())
 
 row_counter = 0
 
-with open(combined_file_path, buffering=10000) as f:
+with open(combined_file_path, buffering=1000000) as f:
     for row in f:
         row_counter += 1
-        if row_counter % 100000 == 0:
+        if row_counter % 1000000 == 0:
             print('Working on row {}'.format(row_counter))
         row = json.loads(row)
         id = row['id']
